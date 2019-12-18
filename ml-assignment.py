@@ -38,7 +38,7 @@ def preProcessing(data):
         median = data.median()
         data.fillna(median, inplace=True)
 
-    #data = preprocessing.normalize(data)
+    data = preprocessing.normalize(data)
     data = preprocessing.scale(data)
     return data
 
@@ -49,13 +49,14 @@ def defineVariables(name):
     y = data[data.columns[0]]
     return X, y
 
-def plotData(x, y, cv, title, tag):
+def plotData(x,y, cv, title, tag):
     xstr = []
     for i in x:
-        xstr.append(str(i) + " " + tag)
+        xstr.append(str(i) + " ")
     plt.title(title)
     plt.plot(xstr, y ,label='Testing Accuracy')
     plt.plot(xstr, cv, label='10-fold CV Accuracy')
+    plt.xlabel(tag)
     plt.legend()
     plt.show()
 
@@ -122,11 +123,11 @@ def randomForest(n_trees, cv, min_leaf, X, y):
 
 def nerualNetwork(hiddenLayers, cv, maxIter, X, y):
     xtrain, xtest, ytrain, ytest = splitData(X, y)
-    CVaccuracyscore = []
-    accuracyscore = []
     for it in maxIter:
+        CVaccuracyscore = []
+        accuracyscore = []
         for i in hiddenLayers:
-            mlp = MLPClassifier(hidden_layer_sizes=i,activation="logistic", max_iter=it, solver='adam')
+            mlp = MLPClassifier(hidden_layer_sizes=i,activation="logistic", max_iter=it, solver='adam', learning_rate_init=0.17)
             print("\nFitting Model : Artifcal Neural Network : " + str(i) + "\n")
             mlp.fit(xtrain,ytrain) ; predictions = mlp.predict(xtest)
             print(classification_report(ytest,predictions) +"\nOverall accuracy of model (True Positive + True Negative / Total) : " + str(accuracy(confusion_matrix(ytest, predictions))) + "\n\nCalculating Cross Validation Scores")
@@ -138,9 +139,9 @@ def nerualNetwork(hiddenLayers, cv, maxIter, X, y):
             accuracyscore.append(accuracy(confusion_matrix(ytest, predictions)))
             CVaccuracyscore.append(cross_score.mean())
         #Plot data for several layers
-        #plotData(hiddenLayers, accuracyscore, CVaccuracyscore, "Neural Network with " + str(it) + "epochs ", "neruons")
+        plotData(hiddenLayers, CVaccuracyscore, "Neural Network with " + str(it) + "epochs ", "neruons")
     #Plot Data for one hidden layer and multiple itterations
-    plotData(maxIter, accuracyscore, CVaccuracyscore, "Neural Network with " + str(hiddenLayers) + "neurons ", "epoch")
+    #plotData(maxIter, accuracyscore, "Neural Network with " + str(hiddenLayers) + "neurons ", "epoch")
 
     
 def splitData(X, y):
@@ -157,14 +158,17 @@ def main():
     #Neural Network variables:
         #Hidden Layer : Can contain a list or indvidual variables. (X, X) is two hidden layers.
         #Max Interations : The number of times the neural network will train
-    hiddenLayer = [(500,500)]
-    maxIter = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    #hiddenLayer = [(50,50),(100,100),(150,150), (200,200),(250,250),(300,300),(350,350),(400,400),(450,450),(500,500)]
+    #hiddenLayer = [(10,10),(15,15),(20,20),(25,25),(30,30),(35,35),(40,40),(45,45),(50,50),(55,55)]
+    hiddenLayer = [(50,50)]
+
+    maxIter = [1000]
 
     #RandomForest variables
         #The number of trees
         #The number of leafs
-    trees = [10, 30, 50, 100, 200, 500, 1000]
-    minLeaf = [10, 20, 30, 40]
+    trees = [20, 500, 10000]
+    minLeaf = [5]
 
     #Summary Stage
     summaryOfDataSet()
@@ -177,7 +181,7 @@ def main():
     X, y = defineVariables(fileName)
     X = preProcessing(X)
 
-    nerualNetwork(hiddenLayer, crossVal, maxIter, X, y)
-    #randomForest(trees, crossVal, minLeaf, X, y)
+    #nerualNetwork(hiddenLayer, crossVal, maxIter, X, y)
+    randomForest(trees, crossVal, minLeaf, X, y)
     
 main()
